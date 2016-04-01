@@ -64,11 +64,10 @@ impl Grid {
 }
 
 fn coords_to_index(coords: (i16, i16), grid_width: i16, grid_height: i16) -> usize {
-    let x: i32 = coords.0 as i32;
-    let y: i32 = coords.1 as i32;
-    let x_wrapped = (x + grid_width as i32) % grid_width as i32;
-    let y_wrapped = (y + grid_height as i32) % grid_height as i32;
-    (x_wrapped + (y_wrapped * grid_width as i32)) as usize
+    let (x ,y) = coords;
+    let x_wrapped = (x + grid_width) % grid_width;
+    let y_wrapped = (y + grid_height) % grid_height;
+    (x_wrapped as i32 + (y_wrapped as i32 * grid_width as i32)) as usize
 }
 
 #[cfg(test)]
