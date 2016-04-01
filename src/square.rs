@@ -4,11 +4,11 @@ use glium::Display;
 use glium::vertex::VertexBufferAny;
 use glium::vertex::VertexBuffer;
 use glium::index::IndexBuffer;
-use glium::index::TrianglesList;
+use glium::index::PrimitiveType::TrianglesList;
 
 use cell::Cell;
 
-pub fn geometry(display: &Display) -> (VertexBufferAny, IndexBuffer) {
+pub fn geometry(display: &Display) -> (VertexBufferAny, IndexBuffer<u16>) {
     (vertices(display), indices(display))
 }
 
@@ -24,17 +24,17 @@ fn vertices(display: &Display) -> VertexBufferAny {
     let colour = [0.2, 0.2, 0.2];
 
     VertexBuffer::new(display,
-        vec![
+        &vec![
             Vertex { vertex_position: [ -0.5,  0.5], vertex_color: colour },
             Vertex { vertex_position: [  0.5,  0.5], vertex_color: colour },
             Vertex { vertex_position: [  0.5, -0.5], vertex_color: colour },
             Vertex { vertex_position: [ -0.5, -0.5], vertex_color: colour },
         ]
-    ).into_vertex_buffer_any()
+    ).unwrap().into_vertex_buffer_any()
 }
 
-fn indices(display: &Display) -> IndexBuffer {
-    IndexBuffer::new(display, TrianglesList(vec![0u16, 1, 2, 0, 2, 3]))
+fn indices(display: &Display) -> IndexBuffer<u16> {
+    IndexBuffer::new(display, TrianglesList,&vec![0u16, 1, 2, 0, 2, 3]).unwrap()
 }
 
 #[derive(Copy, Clone)]
@@ -53,5 +53,5 @@ pub fn instances(display: &Display, grid: &Vec<Cell>) -> VertexBufferAny {
             model_scale: cell.scale
         })
     }
-    VertexBuffer::new(display, data).into_vertex_buffer_any()
+    VertexBuffer::new(display, &data).unwrap().into_vertex_buffer_any()
 }

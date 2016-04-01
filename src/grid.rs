@@ -3,14 +3,19 @@ use seeds::Seed;
 
 pub struct Grid {
     pub cells: Vec<Cell>,
+    pub checksum: u64,
 }
 
 impl Grid {
     pub fn new(seed: Seed, width: i16, height: i16, square_size: f32) -> Grid {
         let mut cells = Vec::new();
+        
+        let mut checksum = 0u64;
+        let mut current_bit = 1u64;
 
-        for y in (0..height) {
-            for x in (0..width) {
+        for y in 0..height {
+            for x in 0..width {
+                let alive = seed(x, y); 
                 cells.push(Cell {
                     x: (x as f32 * square_size + square_size / 2.),
                     y: -(y as f32 * square_size + square_size / 2.),
@@ -20,30 +25,50 @@ impl Grid {
                         (x-1, y  ),           (x+1, y  ),
                         (x-1, y+1), (x, y+1), (x+1, y+1)
                     ].iter().map(|n| coords_to_index(*n, width, height)).collect(),
-                    alive: seed(x, y),
+                    alive: alive,
                 });
+                
+                if alive {
+                    checksum ^= current_bit;
+                }
+                current_bit <<= 1;
+                if current_bit == 0 {
+                    current_bit = 1;
+                }
             }
         }
-        Grid{ cells: cells }
+        Grid { cells: cells, checksum: checksum }
     }
 
     pub fn update(&mut self) {
+        let mut checksum = 0u64;
+        let mut current_bit = 1u64;
+        
         let mut alive_neighbours = Vec::new();
         for cell in self.cells.iter() {
             alive_neighbours.push(cell.neighbours.iter().filter(|n| self.cells[**n].alive).count())
         }
 
         for (cell, cell_alive_neighbours) in self.cells.iter_mut().zip(alive_neighbours.iter()) {
-            cell.update(*cell_alive_neighbours)
+            cell.update(*cell_alive_neighbours);
+            if cell.alive {
+                checksum ^= current_bit;
+            }
+            current_bit <<= 1;
+            if current_bit == 0 {
+                current_bit = 1;
+            }
         }
+        self.checksum = checksum;
     }
 }
 
 fn coords_to_index(coords: (i16, i16), grid_width: i16, grid_height: i16) -> usize {
-    let (x, y) = coords;
-    let x_wrapped = (x + grid_width) % grid_width;
-    let y_wrapped = (y + grid_height) % grid_height;
-    (x_wrapped + (y_wrapped * grid_width)) as usize
+    let x: i32 = coords.0 as i32;
+    let y: i32 = coords.1 as i32;
+    let x_wrapped = (x + grid_width as i32) % grid_width as i32;
+    let y_wrapped = (y + grid_height as i32) % grid_height as i32;
+    (x_wrapped + (y_wrapped * grid_width as i32)) as usize
 }
 
 #[cfg(test)]
