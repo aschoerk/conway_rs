@@ -9,3 +9,8 @@ rustc-serialize = "0.3.18"
 rand = "*"
 glium = "*"
 glutin = "*"
+time = "*"
+# scoped_threadpool = "0.1.*"
+
+[dependencies.scoped_threadpool]
+git = "https://github.com/Kimundi/scoped-threadpool-rs"

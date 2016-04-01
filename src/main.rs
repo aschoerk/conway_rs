@@ -2,10 +2,13 @@
 extern crate glium;
 extern crate glutin;
 extern crate rand;
+extern crate time;
+extern crate scoped_threadpool;
 
 use glium::DisplayBuild;
 use glium::Surface;
 use glium::Program;
+use time::PreciseTime;
 use std::time::Duration;
 use std::env;
 use std::thread;
@@ -27,6 +30,7 @@ fn main() {
     let mut chksum1 = 0;
     let mut chksum2 = 0;
     let mut render_gen = 0;
+    let start = PreciseTime::now();
 
     let seed = env::args().nth(1).map(|s|
         seeds::named(&s).expect("Invalid seed name! Valid seeds are random or gosper_glider")
@@ -54,7 +58,7 @@ fn main() {
     let square_size = 8.0;
 
     // Arc is needed until thread::scoped is stable
-    let grid = Arc::new(Mutex::new(Grid::new(seed, 256, 192, square_size)));
+    let grid = Arc::new(Mutex::new(Grid::new(seed, 50, 50, square_size)));
 
     {
         let grid = grid.clone();
@@ -67,6 +71,8 @@ fn main() {
                 if gen > 2 {
                     if chksum1 == chksum || chksum2 == chksum {
                         println!("duplicate chksum found");
+                        let end = PreciseTime::now();
+                        println!("{} seconds for whatever you did.", start.to(end));
                         return;
                     }                    
                     if gen % 2 == 0 {

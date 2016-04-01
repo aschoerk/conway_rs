@@ -6,6 +6,8 @@ dependencies = [
  "glutin 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "scoped_threadpool 0.1.7 (git+https://github.com/Kimundi/scoped-threadpool-rs)",
+ "time 0.1.34 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -342,6 +344,11 @@ version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "scoped_threadpool"
+version = "0.1.7"
+source = "git+https://github.com/Kimundi/scoped-threadpool-rs#f793e37eeb821269f3babfaaef2e7903d3b8a214"
+
+[[package]]
 name = "serde"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -377,6 +384,16 @@ dependencies = [
  "kernel32-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "winapi 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "time"
+version = "0.1.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "kernel32-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

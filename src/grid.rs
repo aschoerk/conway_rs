@@ -1,9 +1,11 @@
+use scoped_threadpool::Pool;
 use cell::Cell;
 use seeds::Seed;
 
+
 pub struct Grid {
     pub cells: Vec<Cell>,
-    pub checksum: u64,
+    pub checksum: u64,    
 }
 
 impl Grid {
@@ -43,10 +45,36 @@ impl Grid {
     pub fn update(&mut self) {
         let mut checksum = 0u64;
         let mut current_bit = 1u64;
-        
         let mut alive_neighbours = Vec::new();
-        for cell in self.cells.iter() {
-            alive_neighbours.push(cell.neighbours.iter().filter(|n| self.cells[**n].alive).count())
+        {
+            let mut pool = Pool::new(2);
+            
+            let imut_cells = &self.cells;
+            let size = self.cells.len();            
+            
+            let cells_slice = &self.cells[..];
+            let (c1, c2) = cells_slice.split_at(size / 2);
+            pool.scoped(|scoped| {
+                for chunk in self.cells.chunks(size / 2) {
+                    scoped.execute(move || {
+                        let mut alive_neighbours = Vec::new();
+                        for cell in chunk {
+                            alive_neighbours.push(cell.neighbours.iter().filter(|n| imut_cells[**n].alive).count())
+                        }        
+                    });
+                    
+                }
+                scoped.join_all();                
+            });
+            
+            for cell in c1 {
+                alive_neighbours.push(cell.neighbours.iter().filter(|n| imut_cells[**n].alive).count())
+            }
+            
+            for cell in c2 {
+                alive_neighbours.push(cell.neighbours.iter().filter(|n| imut_cells[**n].alive).count())
+            }
+            
         }
 
         for (cell, cell_alive_neighbours) in self.cells.iter_mut().zip(alive_neighbours.iter()) {

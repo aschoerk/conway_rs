@@ -47,11 +47,14 @@ pub fn instances(display: &Display, grid: &Vec<Cell>) -> VertexBufferAny {
     implement_vertex!(ModelTransform, model_position, model_scale);
 
     let mut data = Vec::new();
-    for cell in grid.iter().filter(|c| c.alive) {
-        data.push(ModelTransform {
-            model_position: [cell.x, cell.y],
-            model_scale: cell.scale
-        })
+    data.reserve_exact(grid.len());
+    for cell in grid.iter() {
+        if cell.alive {            
+            data.push(ModelTransform {
+                model_position: [cell.x, cell.y],
+                model_scale: cell.scale
+            });
+        }
     }
     VertexBuffer::new(display, &data).unwrap().into_vertex_buffer_any()
 }
