@@ -1,16 +1,17 @@
 use scoped_threadpool::Pool;
 use cell::Cell;
 use seeds::Seed;
+use std::sync::{Arc, Mutex};
 
 
 pub struct Grid {
     pub cells: Vec<Cell>,
-    pub checksum: u64,    
+    pub checksum: u64, 
 }
 
 impl Grid {
     pub fn new(seed: Seed, width: i16, height: i16, square_size: f32) -> Grid {
-        let mut cells = Vec::new();
+        let mut cells = Vec::new();        
         
         let mut checksum = 0u64;
         let mut current_bit = 1u64;
@@ -39,45 +40,67 @@ impl Grid {
                 }
             }
         }
-        Grid { cells: cells, checksum: checksum }
+        Grid { cells: cells, checksum: checksum,}
     }
-
-    pub fn update(&mut self) {
+    
+    pub fn update1(&mut self) {
         let mut checksum = 0u64;
         let mut current_bit = 1u64;
         let mut alive_neighbours = Vec::new();
+        for cell in self.cells.iter() {
+            alive_neighbours.push(cell.neighbours.iter().filter(|n| self.cells[**n].alive).count())
+        }
+        
+        for (cell, cell_alive_neighbours) in self.cells.iter_mut().zip(alive_neighbours.iter()) {
+            cell.update(*cell_alive_neighbours);
+            if cell.alive {
+                checksum ^= current_bit;
+            }
+            current_bit <<= 1;
+            if current_bit == 0 {
+                current_bit = 1;
+            }
+            self.checksum = checksum;
+        }
+    }
+
+    pub fn update2(&mut self, pool_arc: Arc<Mutex<Pool>>) {
+        let mut checksum = 0u64;
+        let mut current_bit = 1u64;
+        let size = self.cells.len(); 
+        // let neighbour_vectors = Arc::new(Mutex::new(Vec::new()));
+        let alive_neighbours = Arc::new(Mutex::new(Vec::new()));
+        alive_neighbours.lock().unwrap().resize(size,0usize);
         {
-            let mut pool = Pool::new(2);
-            
-            let imut_cells = &self.cells;
-            let size = self.cells.len();            
-            
-            let cells_slice = &self.cells[..];
-            let (c1, c2) = cells_slice.split_at(size / 2);
+            let imut_cells = &self.cells;          
+                       
+            let mut ix = 0;
+            let mut pool = pool_arc.lock().unwrap();
+            let thread_count = pool.thread_count();
             pool.scoped(|scoped| {
-                for chunk in self.cells.chunks(size / 2) {
+                for chunk in self.cells.chunks(size / thread_count as usize) {
+                    let tmp_alive_neighbours = alive_neighbours.clone();
+                    // let tmp_neighbour_vectors = neighbour_vectors.clone();
                     scoped.execute(move || {
-                        let mut alive_neighbours = Vec::new();
+                        let mut local_alive_neighbours = Vec::new();
+                        let mut myix = ix;
                         for cell in chunk {
-                            alive_neighbours.push(cell.neighbours.iter().filter(|n| imut_cells[**n].alive).count())
+                            local_alive_neighbours.push(cell.neighbours.iter().filter(|n| imut_cells[**n].alive).count())
                         }        
+                        let mut vec = tmp_alive_neighbours.lock().unwrap();
+                        for nc in local_alive_neighbours {
+                            vec[myix] = nc;
+                            myix += 1;
+                        }
+                        // tmp_neighbour_vectors.lock().unwrap().push(&local_alive_neighbours);
                     });
-                    
+                    ix += chunk.len();                    
                 }
                 scoped.join_all();                
-            });
-            
-            for cell in c1 {
-                alive_neighbours.push(cell.neighbours.iter().filter(|n| imut_cells[**n].alive).count())
-            }
-            
-            for cell in c2 {
-                alive_neighbours.push(cell.neighbours.iter().filter(|n| imut_cells[**n].alive).count())
-            }
-            
+            });                       
         }
 
-        for (cell, cell_alive_neighbours) in self.cells.iter_mut().zip(alive_neighbours.iter()) {
+        for (cell, cell_alive_neighbours) in self.cells.iter_mut().zip(alive_neighbours.lock().unwrap().iter()) {
             cell.update(*cell_alive_neighbours);
             if cell.alive {
                 checksum ^= current_bit;

@@ -14,6 +14,7 @@ use std::env;
 use std::thread;
 use std::sync::{Arc, Mutex};
 use grid::Grid;
+use scoped_threadpool::Pool;
 
 mod shaders;
 mod square;
@@ -23,6 +24,8 @@ mod seeds;
 
 const UPDATES_PER_SECOND: u64 = 100;
 
+const THREAD_COUNT: usize = 6usize;                          
+
 fn main() {
     let width = 1024.0;
     let height = 768.0;
@@ -31,6 +34,8 @@ fn main() {
     let mut chksum2 = 0;
     let mut render_gen = 0;
     let start = PreciseTime::now();
+    
+    let pool = Arc::new(Mutex::new((Pool::new(THREAD_COUNT as u32))));
 
     let seed = env::args().nth(1).map(|s|
         seeds::named(&s).expect("Invalid seed name! Valid seeds are random or gosper_glider")
@@ -58,15 +63,16 @@ fn main() {
     let square_size = 8.0;
 
     // Arc is needed until thread::scoped is stable
-    let grid = Arc::new(Mutex::new(Grid::new(seed, 50, 50, square_size)));
+    let grid = Arc::new(Mutex::new(Grid::new(seed, 256, 192, square_size)));
 
     {
         let grid = grid.clone();
         // Spawn off thread to update the grid. Main thread will be in charge of rendering
         thread::spawn(move || {
             loop {
-                std::thread::sleep(Duration::from_millis(1000 / UPDATES_PER_SECOND));
-                grid.lock().unwrap().update();
+                // std::thread::sleep(Duration::from_millis(1000 / UPDATES_PER_SECOND));
+                grid.lock().unwrap().update1();
+                // grid.lock().unwrap().update2(pool.clone());
                 let chksum = grid.lock().unwrap().checksum;
                 if gen > 2 {
                     if chksum1 == chksum || chksum2 == chksum {
@@ -91,7 +97,7 @@ fn main() {
 
     loop {
         render_gen += 1;
-        std::thread::sleep(Duration::from_millis(100));
+        std::thread::sleep(Duration::from_millis(50));
         if render_gen % 100 == 0 {
             println!("render_gen: {} chksum1: {} chksum2 {}", render_gen, chksum1, chksum2);
         }
