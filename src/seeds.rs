@@ -1,4 +1,10 @@
 use rand;
+use std::error::Error;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::io;
+use std::path::Path;
 
 pub type Seed = fn(i16, i16) -> bool;
 
@@ -6,12 +12,37 @@ pub fn named(seed: &str) -> Option<Seed> {
     match seed {
         "random" => Some(random),
         "gosper_glider" => Some(gosper_glider),
-        _ => None,
+        "binary_adder" => Some(binary_adder),
+        _ => Some(read_file(seed).unwrap()),
     }
+}
+
+pub fn read_file(name: &str) -> io::Result<Seed> {
+    let path = Path::new(name);
+    if path.exists() {        
+        let mut file = try!(File::open(path));
+        let mut reader = BufReader::new(file);
+        for line in reader.lines() {
+            let line = try!(line);
+            println!("{}",line);
+        }
+    }
+    
+    Ok::<Seed,io::Error>(random)
 }
 
 pub fn random(_: i16, _: i16) -> bool {
     rand::random()
+}
+
+pub fn binary_adder(x: i16, y: i16) -> bool {
+    match (x, y) {
+        (111,111) => true,
+        (112,111) => true,
+        (113,112) => true,
+        (114,113) => true,
+        _ => false
+    }
 }
 
 pub fn gosper_glider(x: i16, y: i16) -> bool {

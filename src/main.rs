@@ -71,8 +71,8 @@ fn main() {
         thread::spawn(move || {
             loop {
                 // std::thread::sleep(Duration::from_millis(1000 / UPDATES_PER_SECOND));
-                grid.lock().unwrap().update1();
-                // grid.lock().unwrap().update2(pool.clone());
+                // grid.lock().unwrap().update1();
+                grid.lock().unwrap().update2(pool.clone());
                 let chksum = grid.lock().unwrap().checksum;
                 if gen > 2 {
                     if chksum1 == chksum || chksum2 == chksum {
