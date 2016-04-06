@@ -4,6 +4,7 @@ extern crate glutin;
 extern crate rand;
 extern crate time;
 extern crate scoped_threadpool;
+extern crate core;
 
 use glium::DisplayBuild;
 use glium::Surface;
@@ -24,7 +25,7 @@ mod seeds;
 
 const UPDATES_PER_SECOND: u64 = 100;
 
-const THREAD_COUNT: usize = 6usize;                          
+const THREAD_COUNT: usize = 3usize;                          
 
 fn main() {
     let width = 1024.0;
@@ -39,7 +40,7 @@ fn main() {
 
     let seed = env::args().nth(1).map(|s|
         seeds::named(&s).expect("Invalid seed name! Valid seeds are random or gosper_glider")
-    ).unwrap_or(seeds::random);
+    ).unwrap_or(Box::new(&seeds::random));
 
     let display = glutin::WindowBuilder::new()
         .with_dimensions(width as u32, height as u32)
@@ -61,9 +62,10 @@ fn main() {
     };
 
     let square_size = 8.0;
+    let f = *seed;
 
     // Arc is needed until thread::scoped is stable
-    let grid = Arc::new(Mutex::new(Grid::new(seed, 256, 192, square_size)));
+    let grid = Arc::new(Mutex::new(Grid::new(f, 256, 192, square_size)));
 
     {
         let grid = grid.clone();

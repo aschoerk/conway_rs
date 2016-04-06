@@ -10,6 +10,7 @@ impl Cell {
     pub fn update(&mut self, alive_neighbours: usize) {
         self.alive = match (self.alive, alive_neighbours) {
             (false, 3) => true,
+            // (false, 6) => true,
             (true, 2) => true,
             (true, 3) => true,
             _ => false

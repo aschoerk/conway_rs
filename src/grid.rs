@@ -10,7 +10,7 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn new(seed: Seed, width: i16, height: i16, square_size: f32) -> Grid {
+    pub fn new(seed: &Seed, width: i16, height: i16, square_size: f32) -> Grid {
         let mut cells = Vec::new();        
         
         let mut checksum = 0u64;
