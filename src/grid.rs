@@ -10,7 +10,7 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn new(seed: &Seed, width: i16, height: i16, square_size: f32) -> Grid {
+    pub fn new(seed: Seed, width: i16, height: i16, square_size: f32) -> Grid {
         let mut cells = Vec::new();        
         
         let mut checksum = 0u64;
@@ -18,7 +18,7 @@ impl Grid {
 
         for y in 0..height {
             for x in 0..width {
-                let alive = seed(x, y); 
+                let alive = seed.containsi16(x, y); 
                 cells.push(Cell {
                     x: (x as f32 * square_size + square_size / 2.),
                     y: -(y as f32 * square_size + square_size / 2.),

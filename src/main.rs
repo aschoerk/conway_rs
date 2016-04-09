@@ -40,8 +40,10 @@ fn main() {
 
     let seed = env::args().nth(1).map(|s|
         seeds::named(&s).expect("Invalid seed name! Valid seeds are random or gosper_glider")
-    ).unwrap_or(Box::new(&seeds::random));
+    ).unwrap_or(seeds::gosper_glider());
 
+    let seed = seeds::named("44P5H2V0").unwrap();
+    
     let display = glutin::WindowBuilder::new()
         .with_dimensions(width as u32, height as u32)
         .with_title(format!("Conways \"Game of Life\" by Rust"))
@@ -62,7 +64,7 @@ fn main() {
     };
 
     let square_size = 8.0;
-    let f = *seed;
+    let f = seed;
 
     // Arc is needed until thread::scoped is stable
     let grid = Arc::new(Mutex::new(Grid::new(f, 256, 192, square_size)));
