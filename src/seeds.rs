@@ -25,13 +25,34 @@ impl Seed {
 		x as u64 | ((y as u64) << 32)
 	}
 	
-	fn add(&mut self, x: i32, y: i32) -> &Seed {		
+	fn add(&mut self, x: i32, y: i32) {		
 		self.points.insert(Seed::hash(x,y));
-		self
 	}
 	
-	pub fn clip_and_centralize(&mut self, width: i32, height: i32) {
-		
+	pub fn clip_and_centralize(&self, width: u32, height: u32) -> Seed {
+		let mut maxx = 0;
+		let mut minx = 999999999999;
+		let mut maxy = 0;
+		let mut miny = 999999999999;
+		for p in self.points.iter() {
+			let x: u32 = (p & 0xFFFFFFFF) as u32;
+			let y: u32 = (p >> 32) as u32;
+			minx = if x >= minx { minx } else { x };
+			miny = if y >= miny { miny } else { y };
+			maxx = if x > maxx { x } else { maxx };
+			maxy = if y > maxx { y } else { maxy };		
+		}
+		let halfx = (maxx as i32 - minx as i32) >> 1;
+		let halfy = (maxy as i32 - miny as i32) >> 1;
+		let movex = (width >> 1) as i32 - halfx;
+		let movey = (height >> 1) as i32 - halfy;
+		let mut result = Seed::new();
+		for p in self.points.iter() {
+			let x: i32 = (p & 0xFFFFFFFF) as i32;
+			let y: i32 = (p >> 32) as i32;
+			result.add(x + movex, y + movey);
+		} 
+		result
 	}
 	
 	pub fn contains(&self, x: i32, y:i32) -> bool {		
