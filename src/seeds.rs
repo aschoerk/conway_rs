@@ -40,7 +40,7 @@ impl Seed {
 			minx = if x >= minx { minx } else { x };
 			miny = if y >= miny { miny } else { y };
 			maxx = if x > maxx { x } else { maxx };
-			maxy = if y > maxx { y } else { maxy };		
+			maxy = if y > maxy { y } else { maxy };		
 		}
 		let halfx = (maxx as i32 - minx as i32) >> 1;
 		let halfy = (maxy as i32 - miny as i32) >> 1;
@@ -149,14 +149,20 @@ impl<'a> Lexer<'a> {
     
 		                	
 	fn eat_char(&mut self, c: char) {
-		println!("eating: {:?}",c);
 		match c {
 			'0' ... '9' => {
 				self.char_count *= 10;
 				self.char_count += c.to_digit(10).unwrap() as i32;
 			},
 			'!' => return,
-			'$' => { self.current_x = 0; self.current_y += 1; }, 
+			'$' => { 
+				if self.char_count == 0 {
+					self.char_count = 1;
+				}
+				self.current_x = 0; 
+				self.current_y += self.char_count; 
+				self.char_count = 0;
+				}, 
 			'b' => { 
 				if self.char_count == 0 {
 					self.char_count = 1;
@@ -198,6 +204,28 @@ pub fn named<'b>(seed: &str) -> Option<Seed> {
 x = 15, y = 11, rule = b3/s23\n
 4bo5bo4b$3b3o3b3o3b$2bo2bo3bo2bo2b$b3o7b3ob$2bobo5bobo2b$4b2o3b2o4b$o\n
 4bo3bo4bo$5bo3bo5b$2o3bo3bo3b2o$2bo2bo3bo2bo2b$4bo5bo!\n")),
+        "10enginecordership" => Some(read_pattern("#N 10-engine Cordership\n
+#O Dean Hickerson\n
+#C A c/12 period 96 diagonal Cordership that uses 10 switch engines, which was the fewest possible known at the time of its discovery.\n
+#C www.conwaylife.com/wiki/index.php?title=10-engine_Cordership\n
+x = 88, y = 88, rule = 23/3\n
+42bo45b$42bo45b$44bo5bo37b$43bo6bobo35b$42bo3bo2bo38b$43bo2bobob2o36b$\n
+48bob2o36b$62b2o24b$62b2o24b7$70b2o16b$26b2o2bo39b2o16b$29bobo56b$28bo\n
+59b2$30b2o56b2$31b2o55b$30bo47b2o8b$28b2ob2o45b2o8b$31b2o55b$16bo12bo\n
+58b$16bo22b3o46b$18bo5bo13bo49b$17bo6bobo10bo4b2o44b$16bo3bo2bo12bo3bo\n
+47b$17bo2bobob2o10bo2bo4bo41b2o$22bob2o10bo3bo3bo32bo8b2o$37b2obob3o\n
+31bobo9b$40bo47b$41b4o31bo2bo8b$30b3o10b2o33b2o8b$29bo3bo45bo8b$28bo4b\n
+o54b$27bo3bo56b$27bo2bob3o53b$27bo7bo52b$2o2bo24bo3bobo40b2o10b$3bobo\n
+23bo3bob2o41bo9b$2bo28b3ob2o39b2o10b2$4b2o82b2$5b2o81b$4bo83b$2b2ob2o\n
+52bobo6bobo17b$5b2o51bo9bobo17b$3bo55bo2bo6bo18b$61b3o24b5$51bo36b$50b\n
+obo35b2$50bo2bo34b$7b2o43b2o34b$7b2o44bo34b5$50b2o36b$52bo35b$15b2o33b\n
+2o36b$15b2o71b5$33bobo6bobo43b$32bo9bobo43b$23b2o8bo2bo6bo44b$23b2o10b\n
+3o50b7$31b2o55b$31b2o!\n")),
+        "Cis-beacon" => Some(read_pattern("#N Cis-beacon up and long hook\n
+#C A period 2 oscillator composed of a beacon and a long hook.\n
+#C www.conwaylife.com/wiki/index.php?title=Beacon_and_long_hook\n
+x = 5, y = 8, rule = B3/S23\n
+2b2ob$3bob$o4b$2o3b2$4ob$o3bo$3b2o!\n")),
         _ => Some(random()),
     }
 }

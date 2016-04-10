@@ -10,6 +10,8 @@ rand = "*"
 glium = "*"
 glutin = "*"
 time = "*"
+getopts = "*"
+
 # scoped_threadpool = "0.1.*"
 
 [dependencies.scoped_threadpool]
