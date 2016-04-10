@@ -7,6 +7,9 @@ use std::sync::{Arc, Mutex};
 pub struct Grid {
     pub cells: Vec<Cell>,
     pub checksum: u64, 
+    pub width: i16,
+    pub height: i16,
+    pub square_size: f32
 }
 
 impl Grid {
@@ -15,6 +18,8 @@ impl Grid {
         
         let mut checksum = 0u64;
         let mut current_bit = 1u64;
+        
+        println!("sq_size {}",square_size);
 
         for y in 0..height {
             for x in 0..width {
@@ -40,7 +45,12 @@ impl Grid {
                 }
             }
         }
-        Grid { cells: cells, checksum: checksum,}
+        Grid { cells: cells, checksum: checksum, width: width, height: height, square_size: square_size}
+    }
+    
+    pub fn coord_to_square(&self, x: i16, y: i16) -> (f32, f32){
+    	
+    	((x as f32 - self.square_size / 2.) / self.square_size, (y as f32 - self.square_size / 2.) / self.square_size)
     }
     
     pub fn update1(&mut self) {
@@ -111,6 +121,12 @@ impl Grid {
             }
         }
         self.checksum = checksum;
+    }
+    
+    pub fn set(&mut self, act_x: i32, act_y: i32, alive: bool) {
+    	let index = coords_to_index((act_x as i16, act_y as i16), self.width, self.height);
+    	println!("changing cell at index: {}",index);
+    	self.cells[index].alive = alive
     }
 }
 

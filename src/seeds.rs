@@ -226,7 +226,21 @@ obo35b2$50bo2bo34b$7b2o43b2o34b$7b2o44bo34b5$50b2o36b$52bo35b$15b2o33b\n
 #C www.conwaylife.com/wiki/index.php?title=Beacon_and_long_hook\n
 x = 5, y = 8, rule = B3/S23\n
 2b2ob$3bob$o4b$2o3b2$4ob$o3bo$3b2o!\n")),
-        _ => Some(random()),
+
+         "4enginecordership" => Some(read_pattern("#N 4-engine Cordership\n
+#O David Bell\n
+#C A 4-engine c/12 period 96 diagonal Cordership found on July 9, 2005.\n
+#C www.conwaylife.com/wiki/index.php?title=4-engine_Cordership\n
+x = 76, y = 76, rule = 23/3\n
+46bo29b$46bo29b$48bo5bo21b$47bo6bobo19b$46bo3bo2bo22b$47bo2bobob2o20b$\n
+52bob2o20b$66b2o8b$66b2o8b7$74b2o$74b2o$55b2o3bo15b$53b3o4b2o14b$48b3o\n
+bo8b2o13b$52bobo2b5o14b$53bo3b3o16b3$40bo35b$40bo7bo27b$40bo5b3o27b$\n
+39b2o3bobo29b$45bo2bo27b$44bo2b2o27b10$27bo48b$24b4o48b4$27bobo46b$28b\n
+o47b$2o2bo21b2o48b$3bobo20bo2bo46b$2bo16bo5b2ob2o46b$19bo56b$4b2o13bo\n
+56b2$5b2o12b2o55b$4bo13bo2bo54b$2b2ob2o11bobo55b$5b2o10b2o57b$3bo13bo\n
+58b$20b2o54b$20b2o54b$20b2o54b$17b2obo55b$18b3o55b$19bo56b4$7b2o67b$7b\n
+2o67b7$15b2o59b$15b2o!\n")),
+                 _ => Some(random()),
     }
 }
 

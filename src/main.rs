@@ -99,46 +99,60 @@ fn main() {
     let square_size = m.opt_str("q").unwrap_or(String::from("8.0")).parse::<f32>().unwrap_or(8.0);
     let xsize = m.opt_str("w").unwrap_or(String::from("256")).parse::<i16>().unwrap_or(256);
     let ysize = m.opt_str("h").unwrap_or(String::from("192")).parse::<i16>().unwrap_or(192);
+    
+    
     let wait_time = m.opt_str("t").unwrap_or(String::from("10")).parse::<i16>().unwrap_or(10);
-    let f = seed.clip_and_centralize(256u32, 192u32);
+    let f = seed.clip_and_centralize(xsize as u32, ysize as u32);
     let mut gen_to_check: usize = m.opt_str("g").unwrap_or(String::from("100")).parse::<i16>().unwrap_or(100) as usize;
+    
+    use std::sync::atomic::{AtomicBool, Ordering};
+    
+    let pause_generations = Arc::new(AtomicBool::new(false));
 
     // Arc is needed until thread::scoped is stable
     let grid = Arc::new(Mutex::new(Grid::new(f, xsize, ysize, square_size)));
 
     {
         let grid = grid.clone();
+        let pause_generations = pause_generations.clone();
         // Spawn off thread to update the grid. Main thread will be in charge of rendering
         thread::spawn(move || {
             loop {
-                // std::thread::sleep(Duration::from_millis(1000 / UPDATES_PER_SECOND));
-                // grid.lock().unwrap().update1();
-                if wait_time >= 0 { std::thread::sleep(Duration::from_millis(wait_time as u64)); }
-                grid.lock().unwrap().update2(pool.clone());
-                let chksum = grid.lock().unwrap().checksum;
-                
-                if gen > 1000 {
-                	if chksums.contains_key(&chksum) {
-                		println!("duplicate chksum found in generation {} now I am in {}", chksums.get(&chksum).unwrap(), gen);
-                        let end = PreciseTime::now();
-                        println!("{} seconds for whatever you did.", start.to(end));
-                        return;
-                	}
-                    
-                    if gen % 100 == 0 {
-                        println!("gen: {}", gen);
-                    }
-                }
-                chksums.insert(chksum, gen);
-                chksumv.push_front(chksum);
-                if chksumv.len() > gen_to_check {
-                	let tmp = chksumv.pop_back().unwrap();
-                	chksums.remove(&tmp);
-                }
-                gen += 1;
+            	if pause_generations.load(Ordering::Relaxed) {
+            		std::thread::sleep(Duration::from_millis(1000u64))
+            	} else {
+	                // std::thread::sleep(Duration::from_millis(1000 / UPDATES_PER_SECOND));
+	                // grid.lock().unwrap().update1();
+	                if wait_time >= 0 { std::thread::sleep(Duration::from_millis(wait_time as u64)); }
+	                grid.lock().unwrap().update2(pool.clone());
+	                let chksum = grid.lock().unwrap().checksum;
+	                
+	                if gen > 1000 {
+	                	if chksums.contains_key(&chksum) {
+	                		println!("duplicate chksum found in generation {} now I am in {}", chksums.get(&chksum).unwrap(), gen);
+	                        let end = PreciseTime::now();
+	                        println!("{} seconds for whatever you did.", start.to(end));
+	                        return;
+	                	}
+	                    
+	                    if gen % 100 == 0 {
+	                        println!("gen: {}", gen);
+	                    }
+	                }
+	                chksums.insert(chksum, gen);
+	                chksumv.push_front(chksum);
+	                if chksumv.len() > gen_to_check {
+	                	let tmp = chksumv.pop_back().unwrap();
+	                	chksums.remove(&tmp);
+	                }
+	                gen += 1;
+            	}
             }
         });
     }
+    
+    let mut act_x = 0;
+    let mut act_y = 0;
 
     loop {
         render_gen += 1;
@@ -155,9 +169,36 @@ fn main() {
         frame.clear_color(1.0, 1.0, 1.0, 1.0);
         frame.draw((&vertices, instances.per_instance().unwrap()), &indices, &program, &uniforms, &std::default::Default::default()).unwrap();
         frame.finish();
-
+		
+		use glium::glutin::ElementState::*;
+        use glium::glutin::Event::*;
+        use glium::glutin::MouseScrollDelta::*;
+        use glium::glutin::MouseButton;
+        use glium::glutin::VirtualKeyCode;
         for event in display.poll_events() {
             match event {
+            	KeyboardInput(Pressed,_,Some(VirtualKeyCode::P)) => {
+            		println!("Key pressed");
+            		pause_generations.store(!pause_generations.load(Ordering::Relaxed), Ordering::Relaxed);
+            	},
+            	MouseInput(Pressed,MouseButton::Left) => {
+            		println!("Mouse pressed");
+            		let mut grid = grid.lock().unwrap();
+            		grid.set(act_x, act_y, true);	
+            	},
+            	MouseInput(Pressed,MouseButton::Right) => {
+            		println!("Mouse pressed");
+            		let mut grid = grid.lock().unwrap();
+            		grid.set(act_x, act_y, false);	
+            	},
+            	MouseMoved((x, y))  => {
+            		println!("mouse moved: {} {}",x,y);
+            		act_x = x / (width / (xsize as f32)) as i32;
+            		act_y = y / (height / (ysize as f32)) as i32;
+            		println!("mouse moved squares: {} {} ",act_x,act_y);
+
+            		
+            	}
                 glutin::Event::Closed => return,
                 _ => ()
             }
