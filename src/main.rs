@@ -105,9 +105,10 @@ fn main() {
     let f = seed.clip_and_centralize(xsize as u32, ysize as u32);
     let mut gen_to_check: usize = m.opt_str("g").unwrap_or(String::from("100")).parse::<i16>().unwrap_or(100) as usize;
     
-    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
     
     let pause_generations = Arc::new(AtomicBool::new(false));
+    let wait_time = Arc::new(AtomicIsize::new(wait_time as isize));
 
     // Arc is needed until thread::scoped is stable
     let grid = Arc::new(Mutex::new(Grid::new(f, xsize, ysize, square_size)));
@@ -115,6 +116,7 @@ fn main() {
     {
         let grid = grid.clone();
         let pause_generations = pause_generations.clone();
+        let wait_time = wait_time.clone();
         // Spawn off thread to update the grid. Main thread will be in charge of rendering
         thread::spawn(move || {
             loop {
@@ -123,7 +125,7 @@ fn main() {
             	} else {
 	                // std::thread::sleep(Duration::from_millis(1000 / UPDATES_PER_SECOND));
 	                // grid.lock().unwrap().update1();
-	                if wait_time >= 0 { std::thread::sleep(Duration::from_millis(wait_time as u64)); }
+	                if wait_time.load(Ordering::Relaxed) >= 0 { std::thread::sleep(Duration::from_millis(wait_time.load(Ordering::Relaxed) as u64)); }
 	                grid.lock().unwrap().update2(pool.clone());
 	                let chksum = grid.lock().unwrap().checksum;
 	                
@@ -180,6 +182,12 @@ fn main() {
             	KeyboardInput(Pressed,_,Some(VirtualKeyCode::P)) => {
             		println!("Key pressed");
             		pause_generations.store(!pause_generations.load(Ordering::Relaxed), Ordering::Relaxed);
+            	},
+            	KeyboardInput(Pressed,_,Some(VirtualKeyCode::Down)) => {
+            		wait_time.store(wait_time.load(Ordering::Relaxed) + 10, Ordering::Relaxed);
+            	},
+            	KeyboardInput(Pressed,_,Some(VirtualKeyCode::Up)) => {
+            		wait_time.store(wait_time.load(Ordering::Relaxed) - 10, Ordering::Relaxed);
             	},
             	MouseInput(Pressed,MouseButton::Left) => {
             		println!("Mouse pressed");

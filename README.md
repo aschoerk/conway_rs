@@ -1,5 +1,13 @@
 # Conway's Game of Life in Rust!
 
+Original comment see below, I added a few features experimentally to learn more about rust
+
+try: cargo run --release -- -q 8 -w 256 -h 192 -s 10enginecordership -t 10 -g 100
+P - pauses the generation
+Up - speeds the generation up
+Down - slows the generation down
+
+
 This is my first attempt at making something real in Rust, built using various Rust nightlies in the month or so
 leading up to the first stable release. 
 
