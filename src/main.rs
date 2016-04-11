@@ -6,6 +6,7 @@ extern crate time;
 extern crate scoped_threadpool;
 extern crate core;
 extern crate getopts;
+extern crate hyper;
 
 use glium::DisplayBuild;
 use glium::Surface;
@@ -35,7 +36,10 @@ const THREAD_COUNT: usize = 3usize;
 
 fn print_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} FILE [options]", program);
-    print!("{}", opts.usage(&brief));
+    println!("{}", opts.usage(&brief));
+    println!("Pressing p pauses and resumes the generations");
+    println!("Up - speed generation up");
+    println!("Down - slows generation down");
 }
 
 fn get_options() -> Matches {
@@ -48,7 +52,7 @@ fn get_options() -> Matches {
 	opts.optopt("g","generations","number of generations to check for repetitions","100");
 	opts.optopt("w","width","width of screen","256");
 	opts.optopt("h","height","height of screen","192");	
-	opts.optopt("s","seed","seed - random gosper_glider ...","");	
+	opts.optopt("s","seed","seed - random gosper_glider ... or url of an rle-file","");	
 	opts.optflag("?","help","print this help menu");	
 	let matches = match opts.parse(&args[1..]) {
         Ok(m) => { m }

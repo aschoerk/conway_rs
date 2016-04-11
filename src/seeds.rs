@@ -10,6 +10,9 @@ use std::boxed::Box;
 use core::iter::Enumerate;
 use std::collections::HashSet;
 
+use hyper::Client;
+use hyper::header::Connection;
+
 
 pub struct Seed {
 	points: HashSet<u64>,
@@ -240,8 +243,22 @@ o47b$2o2bo21b2o48b$3bobo20bo2bo46b$2bo16bo5b2ob2o46b$19bo56b$4b2o13bo\n
 56b2$5b2o12b2o55b$4bo13bo2bo54b$2b2ob2o11bobo55b$5b2o10b2o57b$3bo13bo\n
 58b$20b2o54b$20b2o54b$20b2o54b$17b2obo55b$18b3o55b$19bo56b4$7b2o67b$7b\n
 2o67b7$15b2o59b$15b2o!\n")),
-                 _ => Some(random()),
+                 _ => Some(read_http(seed)),
     }
+}
+
+pub fn read_http(url: &str) -> Seed {
+	let client = Client::new();
+	let mut res = client.get(url)
+	               .header(Connection::close()).send().unwrap();
+	let mut br = BufReader::new(res);
+	let mut s = String::new();
+	let lines = br.read_to_string(&mut s);
+
+    let t = s.replace("\r", "\r\x0a");
+	println!("line: {}",t);
+
+	read_pattern(&t[..])
 }
 
 pub fn read_pattern(pattern: &str) -> Seed {
